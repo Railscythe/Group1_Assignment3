@@ -1,6 +1,6 @@
 Flask==2.3.3
 numpy>=1.19.5,<1.25
-tensorflowtf
+tensorflow
 tf_keras
 opencv-python==4.7.0.72
 gunicorn
