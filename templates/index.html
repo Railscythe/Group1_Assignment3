@@ -89,28 +89,31 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+        
             const frameData = canvas.toDataURL('image/jpeg');
-
+        
             // Send the captured frame to the server
             fetch('/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
             })
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
-                if (data.error) {
-                    predictionOverlay.textContent = "Error: " + data.error;
+                const [label, probability] = data.split(',');
+        
+                if (label === "Error") {
+                    predictionOverlay.textContent = `Detection Failed: ${probability}`;
                 } else {
-                    predictionOverlay.textContent = `Detected: ${data.label} (${data.probability}%)`;
+                    predictionOverlay.textContent = `Detected: ${label} (${probability}%)`;
                 }
             })
             .catch(err => {
                 console.error("Error sending frame:", err);
-                predictionOverlay.textContent = "Detection failed!";
+                predictionOverlay.textContent = "Detection Failed!";
             });
         }, 1000); // Send a frame every second
+
     </script>
 </body>
 </html>
