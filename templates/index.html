@@ -13,7 +13,6 @@
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -21,10 +20,10 @@
             color: #fff;
             overflow: hidden;
         }
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        .container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
         .video-container {
             position: relative;
@@ -35,24 +34,30 @@
             overflow: hidden;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-        video, canvas {
+        video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            position: absolute;
         }
-        .overlay {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
+        .prediction-container {
             background-color: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+        }
+        .prediction-container h2 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        .prediction-container p {
             font-size: 1.2rem;
+            line-height: 1.5;
         }
         footer {
-            margin-top: 20px;
+            position: absolute;
+            bottom: 10px;
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.8);
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -60,19 +65,20 @@
     </style>
 </head>
 <body>
-    <h1>Fashion Detection Live Stream</h1>
-    <div class="video-container">
-        <video id="video" autoplay></video>
-        <canvas id="canvas" style="display: none;"></canvas>
-        <div class="overlay" id="prediction">Detecting...</div>
+    <div class="container">
+        <div class="video-container">
+            <video id="video" autoplay></video>
+        </div>
+        <div class="prediction-container" id="prediction-container">
+            <h2>Predictions</h2>
+            <p id="prediction">Waiting for predictions...</p>
+        </div>
     </div>
     <footer>Powered by GROUP 1 || Fashion Detection Model</footer>
-    <footer>Copyright &copy; 2025 | Smriti | Smriti Chaudhury | Raghu | Ronak | Aditya |</footer>
 
     <script>
         const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const predictionOverlay = document.getElementById('prediction');
+        const predictionContainer = document.getElementById('prediction');
 
         // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
@@ -83,16 +89,16 @@
                 console.error("Camera access denied:", err);
             });
 
-        // Process the video frames in real-time
+        // Send video frames for predictions
         setInterval(() => {
+            const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
             const frameData = canvas.toDataURL('image/jpeg');
-        
-            // Send the captured frame to the server
+
             fetch('/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -101,19 +107,17 @@
             .then(response => response.text())
             .then(data => {
                 const [label, probability] = data.split(',');
-        
                 if (label === "Error") {
-                    predictionOverlay.textContent = `Detection Failed: ${probability}`;
+                    predictionContainer.textContent = `Error: ${probability}`;
                 } else {
-                    predictionOverlay.textContent = `Detected: ${label} (${probability}%)`;
+                    predictionContainer.textContent = `Detected: ${label} (${probability}%)`;
                 }
             })
             .catch(err => {
                 console.error("Error sending frame:", err);
-                predictionOverlay.textContent = "Detection Failed!";
+                predictionContainer.textContent = "Detection failed!";
             });
         }, 1000); // Send a frame every second
-
     </script>
 </body>
 </html>
