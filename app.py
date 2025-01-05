@@ -35,9 +35,6 @@ def process_frame():
         image_data = data['image'].split(',')[1]
         image_bytes = base64.b64decode(image_data)
 
-        # Debug: Print the received image data length
-        print(f"Received image data length: {len(image_bytes)}")
-
         # Convert to numpy array and preprocess
         nparr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -52,10 +49,12 @@ def process_frame():
         # Debug: Print prediction details
         print(f"Predicted Label: {label}, Probability: {probability:.2f}%")
 
+        # Return prediction
         return f"{label},{round(probability, 2)}"
     except Exception as e:
-        print(f"Error in prediction: {str(e)}")
-        return f"Error,{str(e)}"
+        print(f"Error in /process_frame: {e}")
+        return "Error,Failed to process frame", 500
+
 
 
 @app.route('/')

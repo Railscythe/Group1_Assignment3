@@ -96,26 +96,32 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+        
             const frameData = canvas.toDataURL('image/jpeg');
-
+        
             fetch('/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
             })
-            .then(response => response.text())
+            .then(response => response.text()) // Get plain text response
             .then(data => {
-                const [label, probability] = data.split(',');
+                console.log("Server Response:", data); // Debug server response
+                const parts = data.split(',');
+                const label = parts[0];
+                const probability = parts[1];
+        
                 if (label === "Error") {
-                    predictionContainer.textContent = `Error: ${probability}`;
+                    predictionOverlay.textContent = `Detection Failed: ${probability}`;
+                } else if (!label || !probability) {
+                    predictionOverlay.textContent = "Invalid Prediction!";
                 } else {
-                    predictionContainer.textContent = `Detected: ${label} (${probability}%)`;
+                    predictionOverlay.textContent = `Detected: ${label} (${probability}%)`;
                 }
             })
             .catch(err => {
                 console.error("Error sending frame:", err);
-                predictionContainer.textContent = "Detection failed!";
+                predictionOverlay.textContent = "Detection failed!";
             });
         }, 1000); // Send a frame every second
     </script>
