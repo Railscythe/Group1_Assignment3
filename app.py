@@ -2,6 +2,8 @@ from flask import Flask, Response, render_template
 import pickle
 import cv2
 import numpy as np
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU entirely
 
 # Initialize Flask app
 app = Flask(__name__)
