@@ -1,9 +1,8 @@
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, request
 import pickle
 import cv2
 import numpy as np
-#import os
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU entirely
+import base64
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -19,9 +18,6 @@ fashion_classes = [
     "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
 ]
 
-# Initialize video capture
-camera = cv2.VideoCapture(0)
-
 def preprocess_frame(frame):
     """Preprocess frame for model prediction."""
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -30,49 +26,29 @@ def preprocess_frame(frame):
     reshaped = np.expand_dims(normalized, axis=(0, -1))
     return reshaped
 
-def generate_frames():
-    """Generate frames from the webcam for live video feed."""
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        # Resize the frame to a smaller size for display
-        #frame = cv2.resize(frame, (480, 640))
+@app.route('/process_frame', methods=['POST'])
+def process_frame():
+    """Process the frame sent from the client."""
+    try:
+        # Get image data from client
+        data = request.get_json()
+        image_data = data['image'].split(',')[1]
+        image_bytes = base64.b64decode(image_data)
 
-        # Preprocess the frame for prediction
+        # Convert to numpy array and preprocess
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         processed_frame = preprocess_frame(frame)
 
-       # Make prediction
-        try:
-            predictions = model.predict(processed_frame, verbose=0)
-            class_idx = np.argmax(predictions)
-            label = fashion_classes[class_idx]
-            probability = predictions[0][class_idx] * 100  # Probability in percentage
-        except Exception as e:
-            print(f"Prediction error: {e}")
-            break
-    
-        # Draw bounding box around the detected apparel
-        # Assuming the detected apparel occupies the whole frame, a simple rectangle will be drawn.
-        height, width = frame.shape[:2]
-        cv2.rectangle(frame, (50, 50), (width - 50, height - 50), (0, 255, 0), 2)  # Draw rectangle
-    
-        # Annotate the frame with label and probability
-        cv2.putText(frame, f"Detected: {label} ({probability:.2f}%)", (10, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        # Make prediction
+        predictions = model.predict(processed_frame, verbose=0)
+        class_idx = np.argmax(predictions)
+        label = fashion_classes[class_idx]
+        probability = predictions[0][class_idx] * 100
 
-        # Encode frame as JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-
-        # Yield the frame as a response
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-@app.route('/video_feed')
-def video_feed():
-    """Route to display the live video feed."""
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        return f"{label},{round(probability, 2)}"
+    except Exception as e:
+        return f"Error,{str(e)}"
 
 @app.route('/')
 def index():
