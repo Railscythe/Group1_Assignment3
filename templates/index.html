@@ -112,13 +112,13 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
             })
-            .then(response => response.text()) // Get plain text response
+            .then(response => response.text())
             .then(data => {
                 console.log("Server Response:", data); // Debug server response
                 const parts = data.split(',');
                 const label = parts[0];
                 const probability = parts[1];
-        
+            
                 if (label === "Error") {
                     predictionElement.textContent = `Detection Failed: ${probability}`;
                 } else if (!label || !probability) {
