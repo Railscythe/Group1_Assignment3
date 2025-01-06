@@ -1,15 +1,11 @@
 from flask import Flask, render_template, request
-from flask_cors import CORS
 import pickle
 import cv2
 import numpy as np
 import base64
 
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # This will allow all origins to make requests
-
-# The rest of your code...
-
 
 # Load the model
 model_path = "models/fashion_mnist_model.pkl"
@@ -62,7 +58,3 @@ def process_frame():
 if __name__ == "__main__":
     app.run(debug=False)
     
-import os
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
