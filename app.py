@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pickle
 import cv2
 import numpy as np
@@ -14,7 +14,7 @@ with open(model_path, "rb") as f:
 
 # Define class labels
 fashion_classes = [
-    "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", 
+    "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
     "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
 ]
 
@@ -34,13 +34,21 @@ def index():
 @app.route('/process_frame', methods=['POST'])
 def process_frame():
     try:
+        # Parse request data
         data = request.get_json()
+        if 'image' not in data:
+            return jsonify({'error': 'No image data received'}), 400
+
+        # Decode Base64 image
         image_data = data['image'].split(',')[1]
         image_bytes = base64.b64decode(image_data)
-
-        # Convert to numpy array and preprocess
         nparr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return jsonify({'error': 'Failed to decode image'}), 400
+
+        # Preprocess the frame
         processed_frame = preprocess_frame(frame)
 
         # Make prediction
@@ -49,12 +57,14 @@ def process_frame():
         label = fashion_classes[class_idx]
         probability = predictions[0][class_idx] * 100
 
-        print(f"Predicted Label: {label}, Probability: {probability:.2f}%")
-        return f"{label},{round(probability, 2)}"
+        return jsonify({
+            'label': label,
+            'probability': round(probability, 2)
+        })
+
     except Exception as e:
         print(f"Error in prediction: {e}")
-        return "Error,Invalid frame", 500
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=False)
-    
