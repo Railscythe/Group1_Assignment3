@@ -87,7 +87,7 @@
     <script>
         const video = document.getElementById('video');
         const predictionElement = document.getElementById('prediction');
-
+    
         // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
             .then((stream) => {
@@ -96,18 +96,22 @@
             .catch((err) => {
                 console.error("Camera access denied:", err);
             });
-
+    
         // Send video frames for predictions
         setInterval(() => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+    
+            // Resize the canvas to reduce resolution
+            canvas.width = 128; // Adjust width to reduce size
+            canvas.height = 128; // Adjust height to reduce size
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-            const frameData = canvas.toDataURL('image/jpeg');
-        
-            fetch('https://group1-fashiondetection.onrender.com/process_frame', {
+    
+            // Compress the image to Base64
+            const frameData = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+    
+            // Send the resized frame to the backend
+            fetch('https://your-app-name.onrender.com/process_frame', { // Update to your deployed URL
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
@@ -133,5 +137,6 @@
             });
         }, 1000); // Send a frame every second
     </script>
+
 </body>
 </html>
