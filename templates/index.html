@@ -83,11 +83,10 @@
     </div>
     <footer>Powered by GROUP 1 || Fashion Detection Model</footer>
     <footer>Copyright &copy; 2025 | Smriti | Smriti Chaudhury | Raghu | Ronak | Aditya |</footer>
-
     <script>
         const video = document.getElementById('video');
         const predictionElement = document.getElementById('prediction');
-
+    
         // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
             .then((stream) => {
@@ -96,23 +95,28 @@
             .catch((err) => {
                 console.error("Camera access denied:", err);
             });
-
+    
         // Send video frames for predictions
         setInterval(() => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth || 128; // Fallback size
+            canvas.width = video.videoWidth || 128; // Fallback for empty video size
             canvas.height = video.videoHeight || 128;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+    
             const frameData = canvas.toDataURL('image/jpeg', 0.7); // Compress to 70% quality
-        
+    
             fetch('/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
             })
-            .then(response => response.json()) // Parse JSON response
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     predictionElement.textContent = `Error: ${data.error}`;
@@ -123,10 +127,11 @@
                 }
             })
             .catch(err => {
-                console.error("Error sending frame:", err);
+                console.error("Error:", err);
                 predictionElement.textContent = "Detection failed!";
             });
         }, 1000); // Send a frame every second
     </script>
+
 </body>
 </html>
