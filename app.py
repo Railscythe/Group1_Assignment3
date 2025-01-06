@@ -33,9 +33,7 @@ def index():
 
 @app.route('/process_frame', methods=['POST'])
 def process_frame():
-    """Process a frame sent by the client."""
     try:
-        # Get the image data from the client
         data = request.get_json()
         image_data = data['image'].split(',')[1]
         image_bytes = base64.b64decode(image_data)
@@ -45,16 +43,17 @@ def process_frame():
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         processed_frame = preprocess_frame(frame)
 
-        # Make a prediction
+        # Make prediction
         predictions = model.predict(processed_frame)
         class_idx = np.argmax(predictions)
         label = fashion_classes[class_idx]
         probability = predictions[0][class_idx] * 100
 
-        return f"{label},{probability:.2f}"
+        print(f"Predicted Label: {label}, Probability: {probability:.2f}%")
+        return f"{label},{round(probability, 2)}"
     except Exception as e:
-        print(f"Error: {e}")
-        return "Error,Unable to process frame", 500
+        print(f"Error in prediction: {e}")
+        return "Error,Invalid frame", 500
 
 if __name__ == "__main__":
     app.run(debug=True)
