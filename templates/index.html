@@ -19,6 +19,12 @@
             background: linear-gradient(135deg, #1f4037, #99f2c8);
             color: #fff;
             overflow: hidden;
+            flex-direction: column;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         .container {
             display: flex;
@@ -54,22 +60,23 @@
         .prediction-container p {
             font-size: 1.2rem;
             line-height: 1.5;
+            text-align: center;
         }
         footer {
-            position: absolute;
-            bottom: 10px;
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.8);
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
+    <h1>Fashion Detection Application</h1>
     <div class="container">
         <div class="video-container">
             <video id="video" autoplay></video>
         </div>
-        <div class="prediction-container" id="prediction-container">
+        <div class="prediction-container">
             <h2>Predictions</h2>
             <p id="prediction">Waiting for predictions...</p>
         </div>
@@ -79,7 +86,7 @@
 
     <script>
         const video = document.getElementById('video');
-        const predictionContainer = document.getElementById('prediction');
+        const predictionElement = document.getElementById('prediction');
 
         // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
@@ -113,16 +120,16 @@
                 const probability = parts[1];
         
                 if (label === "Error") {
-                    predictionOverlay.textContent = `Detection Failed: ${probability}`;
+                    predictionElement.textContent = `Detection Failed: ${probability}`;
                 } else if (!label || !probability) {
-                    predictionOverlay.textContent = "Invalid Prediction!";
+                    predictionElement.textContent = "Invalid Prediction!";
                 } else {
-                    predictionOverlay.textContent = `Detected: ${label} (${probability}%)`;
+                    predictionElement.textContent = `Detected: ${label} (${probability}%)`;
                 }
             })
             .catch(err => {
                 console.error("Error sending frame:", err);
-                predictionOverlay.textContent = "Detection failed!";
+                predictionElement.textContent = "Detection failed!";
             });
         }, 1000); // Send a frame every second
     </script>
