@@ -1,11 +1,15 @@
 from flask import Flask, render_template, request
+from flask_cors import CORS
 import pickle
 import cv2
 import numpy as np
 import base64
 
-# Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # This will allow all origins to make requests
+
+# The rest of your code...
+
 
 # Load the model
 model_path = "models/fashion_mnist_model.pkl"
