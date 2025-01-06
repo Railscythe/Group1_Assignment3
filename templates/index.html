@@ -107,7 +107,7 @@
         
             const frameData = canvas.toDataURL('image/jpeg');
         
-            fetch('/process_frame', {
+            fetch('https://group1-fashiondetection.onrender.com/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
