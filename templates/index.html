@@ -101,29 +101,24 @@
         setInterval(() => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 128; // Fallback size
+            canvas.height = video.videoHeight || 128;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-            const frameData = canvas.toDataURL('image/jpeg');
+            const frameData = canvas.toDataURL('image/jpeg', 0.7); // Compress to 70% quality
         
             fetch('/process_frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: frameData })
             })
-            .then(response => response.text())
+            .then(response => response.json()) // Parse JSON response
             .then(data => {
-                console.log("Server Response:", data); // Debug server response
-                const parts = data.split(',');
-                const label = parts[0];
-                const probability = parts[1];
-            
-                if (label === "Error") {
-                    predictionElement.textContent = `Detection Failed: ${probability}`;
-                } else if (!label || !probability) {
-                    predictionElement.textContent = "Invalid Prediction!";
+                if (data.error) {
+                    predictionElement.textContent = `Error: ${data.error}`;
                 } else {
+                    const label = data.label;
+                    const probability = data.probability;
                     predictionElement.textContent = `Detected: ${label} (${probability}%)`;
                 }
             })
